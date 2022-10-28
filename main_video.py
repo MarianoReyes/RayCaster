@@ -93,52 +93,54 @@ def turn():
     draw()
 
 
+y = 50
+
 # config inicial
-framebuffer[10][10] = 1
-framebuffer[10][11] = 1
-framebuffer[11][10] = 1
-framebuffer[11][11] = 1
 
-framebuffer[19][10] = 1
-framebuffer[19][11] = 1
-framebuffer[19][12] = 1
-framebuffer[20][9] = 1
-framebuffer[21][8] = 1
-framebuffer[22][8] = 1
-framebuffer[20][13] = 1
-framebuffer[21][14] = 1
-framebuffer[22][14] = 1
+# Inicio glider gun
+framebuffer[9][y+10] = 1
+framebuffer[9][y+11] = 1
+framebuffer[10][y+10] = 1
+framebuffer[10][y+11] = 1
 
-framebuffer[23][11] = 1
+framebuffer[19][y+10] = 1
+framebuffer[19][y+11] = 1
+framebuffer[19][y+12] = 1
+framebuffer[20][y+9] = 1
+framebuffer[21][y+8] = 1
+framebuffer[22][y+8] = 1
+framebuffer[20][y+13] = 1
+framebuffer[21][y+14] = 1
+framebuffer[22][y+14] = 1
 
-framebuffer[25][11] = 1
-framebuffer[26][11] = 1
-framebuffer[25][10] = 1
-framebuffer[25][12] = 1
-framebuffer[24][9] = 1
-framebuffer[24][13] = 1
+framebuffer[23][y+11] = 1
 
-framebuffer[29][12] = 1
-framebuffer[29][13] = 1
-framebuffer[29][14] = 1
-framebuffer[30][12] = 1
-framebuffer[30][13] = 1
-framebuffer[30][14] = 1
+framebuffer[25][y+11] = 1
+framebuffer[26][y+11] = 1
+framebuffer[25][y+10] = 1
+framebuffer[25][y+12] = 1
+framebuffer[24][y+9] = 1
+framebuffer[24][y+13] = 1
 
-framebuffer[31][15] = 1
-framebuffer[31][11] = 1
-framebuffer[33][11] = 1
-framebuffer[33][10] = 1
-framebuffer[33][15] = 1
-framebuffer[33][16] = 1
+framebuffer[29][y+12] = 1
+framebuffer[29][y+13] = 1
+framebuffer[29][y+14] = 1
+framebuffer[30][y+12] = 1
+framebuffer[30][y+13] = 1
+framebuffer[30][y+14] = 1
 
-framebuffer[43][14] = 1
-framebuffer[43][13] = 1
-framebuffer[44][14] = 1
-framebuffer[44][13] = 1
+framebuffer[31][y+15] = 1
+framebuffer[31][y+11] = 1
+framebuffer[33][y+11] = 1
+framebuffer[33][y+10] = 1
+framebuffer[33][y+15] = 1
+framebuffer[33][y+16] = 1
 
-x = 0
-speed = 1
+framebuffer[43][y+14] = 1
+framebuffer[43][y+13] = 1
+framebuffer[44][y+14] = 1
+framebuffer[44][y+13] = 1
+# final glider gun
 
 running = True
 while running:
@@ -148,7 +150,6 @@ while running:
 
     # paint
     turn()
-
     # flip
     pygame.display.flip()
 
