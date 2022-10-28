@@ -1,13 +1,17 @@
 import pygame
 from OpenGL.GL import *
 import copy
+import random
 
 pygame.init()
 
 scale = 10
 
+width = 100
+height = 100
+
 screen = pygame.display.set_mode(
-    (100*scale, 100*scale),
+    (width*scale, height*scale),
     pygame.OPENGL | pygame.DOUBLEBUF
 )
 
@@ -23,13 +27,11 @@ def pixel(x, y, color):
 x = 1
 y = 1
 
-size = 100
-
 framebuffer = []
 
-for x in range(1, size+1):
+for x in range(1, width+1):
     mm = []
-    for y in range(1, size+1):
+    for y in range(1, height+1):
         xy = 0
         mm.append(xy)
         # print(xy)
@@ -74,8 +76,8 @@ def draw():
 def turn():
     # funcion que simula el turno
     old = copy.deepcopy(framebuffer)
-    for x in range(size):
-        for y in range(size):
+    for x in range(width):
+        for y in range(height):
             # regla 1
             if framebuffer[x][y] == 1:
                 if check_vecinos(x, y, old) < 2:
@@ -93,12 +95,12 @@ def turn():
     draw()
 
 
-y = 50
+# y = 80
 
 # config inicial
 
 # Inicio glider gun
-framebuffer[9][y+10] = 1
+""" framebuffer[9][y+10] = 1
 framebuffer[9][y+11] = 1
 framebuffer[10][y+10] = 1
 framebuffer[10][y+11] = 1
@@ -139,8 +141,18 @@ framebuffer[33][y+16] = 1
 framebuffer[43][y+14] = 1
 framebuffer[43][y+13] = 1
 framebuffer[44][y+14] = 1
-framebuffer[44][y+13] = 1
+framebuffer[44][y+13] = 1 """
 # final glider gun
+
+tamano = (width * height)/3
+x = width
+y = height
+
+while tamano > 0:
+    point_x = random.randint(5, x-5)
+    point_y = random.randint(5, y-5)
+    framebuffer[point_x][point_y] = 1
+    tamano -= 1
 
 running = True
 while running:
