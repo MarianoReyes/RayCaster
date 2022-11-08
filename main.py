@@ -18,10 +18,10 @@ colors = [
 
 walls = {
     "1": pygame.image.load('./wall1.png'),
-    "2": pygame.image.load('./wall1.png'),
-    "3": pygame.image.load('./wall1.png'),
-    "4": pygame.image.load('./wall1.png'),
-    "5": pygame.image.load('./wall1.png')
+    "2": pygame.image.load('./wall2.png'),
+    "3": pygame.image.load('./wall3.png'),
+    "4": pygame.image.load('./wall4.png'),
+    "5": pygame.image.load('./wall5.png')
 }
 
 
@@ -42,9 +42,12 @@ class Raycaster(object):
         # colocar pixel de game of life
         self.screen.set_at((x, y), c)
 
-    def block(self, x, y, c=WHITE):
-        for i in range(x, x+self.blocksize+1):
-            for j in range(y, y+self.blocksize+1):
+    def block(self, x, y, wall):
+        for i in range(x, x+self.blocksize):
+            for j in range(y, y+self.blocksize):
+                tx = int((i-x) * 128 / self.blocksize)
+                ty = int((j-y) * 128 / self.blocksize)
+                c = wall.get_at((tx, ty))
                 self.point(i, j, c)
 
     def load_map(self, filename):
@@ -52,12 +55,16 @@ class Raycaster(object):
             for line in f.readlines():
                 self.map.append(list(line))
 
-    def draw_stake(self, x, h, c):
+    def draw_stake(self, x, h, tx, c):
         start_y = int(self.height/2 - h/2)
         end_y = int(self.height/2 + h/2)
 
+        height = end_y - start_y
+
         for y in range(start_y, end_y):
-            self.point(x, y, c)
+            ty = int((y-start_y) * 128 / height)
+            color = walls[c].get_at((tx, ty))
+            self.point(x, y, color)
 
     def cast_ray(self, a):
         d = 0
@@ -72,7 +79,16 @@ class Raycaster(object):
             j = int(y/self.blocksize)
 
             if self.map[j][i] != ' ':
-                return d, self.map[j][i]
+                hitx = x-i*self.blocksize
+                hity = y-j*self.blocksize
+
+                if 1 < hitx < self.blocksize-1:
+                    maxhit = hitx
+                else:
+                    maxhit = hity
+
+                tx = int(maxhit * 128 / self.blocksize)
+                return d, self.map[j][i], tx
 
             self.point(x, y)
             d += 5
@@ -83,7 +99,7 @@ class Raycaster(object):
                 i = int(x/self.blocksize)
                 j = int(y/self.blocksize)
                 if self.map[j][i] != ' ':
-                    self.block(x, y, colors[int(self.map[j][i])])
+                    self.block(x, y, walls[self.map[j][i]])
 
     def draw_player(self):
         self.point(int(self.player["x"]), int(self.player["y"]))
@@ -98,7 +114,7 @@ class Raycaster(object):
         for i in range(0, density):
             a = self.player["a"] - self.player["fov"] / \
                 2 + self.player["fov"]*i/density
-            d, c = self.cast_ray(a)
+            d, c, _ = self.cast_ray(a)
 
         # separador
         for i in range(0, 500):
@@ -110,12 +126,12 @@ class Raycaster(object):
         for i in range(0, int(self.width/2)):
             a = self.player["a"] - self.player["fov"] / \
                 2 + self.player["fov"]*i/(self.width/2)
-            d, c = self.cast_ray(a)
+            d, c, tx = self.cast_ray(a)
 
             x = int(self.width/2 + i)
             h = self.height/(d * cos(a-self.player["a"])) * 100
 
-            self.draw_stake(x, h, colors[int(c)])
+            self.draw_stake(x, h, tx, c)
 
 
 pygame.init()
