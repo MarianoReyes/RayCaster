@@ -21,13 +21,33 @@ colors = [
 walls = {
     "1": pygame.image.load('./wallc1.jpg'),
     "2": pygame.image.load('./wallc2.jpg'),
+    "3": pygame.image.load('./wallc3.jpg'),
 }
 
-enemies = [
+sprites = [
     {
-        "x": 200,
-        "y": 100,
-        "texture": pygame.image.load('./cofre.png')
+        "x": 205,
+        "y": 395,
+        "texture": pygame.image.load('./cofre.png'),
+        "picked": False
+    },
+    {
+        "x": 305,
+        "y": 395,
+        "texture": pygame.image.load('./cofre.png'),
+        "picked": False
+    },
+    {
+        "x": 405,
+        "y": 395,
+        "texture": pygame.image.load('./cofre.png'),
+        "picked": False
+    },
+    {
+        "x": 405,
+        "y": 105,
+        "texture": pygame.image.load('./cofre.png'),
+        "picked": False
     },
 ]
 
@@ -46,7 +66,7 @@ class Raycaster(object):
             "a": int(pi/3),
             "wincondition": 0
         }
-        movimineto = ""
+        self.movimiento = ""
 
     def point(self, x, y, c=WHITE):
         # colocar pixel de game of life
@@ -116,45 +136,58 @@ class Raycaster(object):
 
     def draw_sprite(self, sprite):
 
-        sprite_a = atan2(sprite["y"] - self.player["y"],
-                         sprite["x"] - self.player["x"])
         sprite_d = ((self.player["x"] - sprite["x"]) **
                     2 + (self.player["y"] - sprite["y"])**2)**0.5
-        sprite_size = (500/sprite_d) * 70
 
-        sprite_x = 500 + \
-            (sprite_a - self.player["a"])*500 / \
-            self.player["fov"] + 250 - sprite_size/2
-        sprite_y = 250 - sprite_size/2
+        if sprite_d != 0 and sprite["picked"] == False:
 
-        sprite_x = int(sprite_x)
-        sprite_y = int(sprite_y)
-        sprite_size = int(sprite_size)
+            sprite_a = atan2(sprite["y"] - self.player["y"],
+                             sprite["x"] - self.player["x"])
 
-        for x in range(sprite_x, sprite_x + sprite_size):
-            for y in range(sprite_y, sprite_y + sprite_size):
-                if 500 < x < 1000 and self.zbuffer[x - 500] >= sprite_d:
-                    tx = int((x - sprite_x) * 128/sprite_size)
-                    ty = int((y - sprite_y) * 128/sprite_size)
-                    c = sprite["texture"].get_at((tx, ty))
-                    if c != (0, 0, 0, 0):
-                        self.point(x, y, c)
-                        self.zbuffer[x - 500] = sprite_d
+            sprite_size = (500/sprite_d) * 30
+
+            sprite_x = 500 + \
+                (sprite_a - self.player["a"])*500 / \
+                self.player["fov"] + 250 - sprite_size/2
+            sprite_y = 250 - sprite_size/2
+
+            sprite_x = int(sprite_x)
+            sprite_y = int(sprite_y)
+            sprite_size = int(sprite_size)
+
+            for x in range(sprite_x, sprite_x + sprite_size):
+                for y in range(sprite_y, sprite_y + sprite_size):
+                    if 500 < x < 1000 and self.zbuffer[x - 500] >= sprite_d:
+                        tx = int((x - sprite_x) * 128/sprite_size)
+                        ty = int((y - sprite_y) * 128/sprite_size)
+                        c = sprite["texture"].get_at((tx, ty))
+                        if c != (0, 0, 0, 0):
+                            self.point(x, y, c)
+                            self.zbuffer[x - 500] = sprite_d
 
     # funcion creada por si chica con pared
     def goback(self):
         if self.movimiento == "izquierda":
-            self.player["x"] += 10
             self.player["y"] += 10
         elif self.movimiento == "derecha":
-            self.player["x"] -= 10
             self.player["y"] -= 10
         elif self.movimiento == "arriba":
             self.player["x"] -= 10
-            self.player["y"] += 10
         elif self.movimiento == "abajo":
             self.player["x"] += 10
-            self.player["y"] -= 10
+
+    def comprobar(self):
+        for sprite in sprites:
+            if sprite["picked"] == False:
+                print("posición del cofre ",
+                      sprite["x"], sprite["y"])
+                if int(sprite["x"]) == int(self.player["x"]) and int(sprite["y"]) == int(self.player["y"]):
+                    sprite["picked"] = True
+                    pygame.mixer.Channel(1).play(
+                        pygame.mixer.Sound('pick.wav'))
+                    self.player["wincondition"] += 1
+        print("posición del jugador", int(
+            self.player["x"]), int(self.player["y"]))
 
     def render(self):
         self.draw_map()
@@ -191,16 +224,22 @@ class Raycaster(object):
             print("Hay una pared ahí...")
             self.goback()
 
-        for enemy in enemies:
-            self.point(enemy["x"], enemy["y"], (0, 0, 0))
-            self.draw_sprite(enemy)
+        for sprite in sprites:
+            if sprite["picked"] == False:
+                self.point(sprite["x"], sprite["y"], (0, 0, 0))
+                self.draw_sprite(sprite)
 
+
+#pygame.mixer.pre_init(44100, -16, 1, 512)
 
 pygame.init()
 # screen = pygame.display.set_mode((1000, 500), pygame.FULLSCREEN)
 screen = pygame.display.set_mode((1000, 500))
 r = Raycaster(screen)
-r.load_map('./map.txt')
+
+pygame.mixer.init()
+sonido_fondo = pygame.mixer.Sound("musica_nivel1.mp3")
+
 
 pygame.display.set_caption('Get Chests')
 
@@ -208,19 +247,60 @@ font = pygame.font.Font('freesansbold.ttf', 32)
 
 clock = pygame.time.Clock()
 
+inicio = pygame.image.load('./pantalla_inicio.jpg')
+
+pygame.mixer.Channel(0).play(pygame.mixer.Sound('musica_nivel1.mp3'))
+
 
 running = True
 while running:
+
+    for x in range(0, 512):
+        for y in range(0, 512):
+            color = inicio.get_at((x, y))
+            r.point(x, y, color)
+
+    pygame.display.flip()
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            running = False
+
+        if (event.type == pygame.KEYDOWN):
+            if (event.key == pygame.K_1):
+                level = 1
+                running = False
+            if (event.key == pygame.K_2):
+                level = 2
+                running = False
+            if (event.key == pygame.K_3):
+                level = 3
+                running = False
+if level == 1:
+    r.load_map("./map1.txt")
+elif level == 2:
+    r.load_map("./map2.txt")
+elif level == 3:
+    r.load_map("./map3.txt")
+
+running = True
+while running:
+
     clock.tick()
     fps = clock.get_fps()
-    fps = str(round(fps, 2)) + " fps"
-    text = font.render(fps, True, WHITE, BLACK)
+    fps = str(round(fps, 2)) + " fps ... "
+    wincond = str(r.player["wincondition"])
+    wincond = wincond + " cofres recogidos"
+
+    todo = fps + wincond
+    level_info = font.render(todo, True, WHITE, BLACK)
 
     screen.fill(BLACK, (0, 0, r.width/2, r.width/2))
     screen.fill(SKY, (r.width/2, 0, r.width, r.height/2))
     screen.fill(GROUND, (r.width/2, r.height/2, r.width, r.height/2))
     r.render()
-    screen.blit(text, (r.width - 300, r.height - 50))
+
+    screen.blit(level_info, (r.width - 480, r.height - 50))
 
     pygame.display.flip()
 
@@ -228,12 +308,15 @@ while running:
 
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.KEYDOWN:
 
-            if event.key == pygame.K_d:
+        # movimiento de camara con ruedita de mouse
+        if event.type == pygame.MOUSEWHEEL:
+            if event.y == 1:
                 r.player["a"] += pi/10
-            if event.key == pygame.K_a:
+            elif event.y == -1:
                 r.player["a"] -= pi/10
+
+        if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_UP:
                 r.movimiento = "arriba"
@@ -248,5 +331,41 @@ while running:
                 r.movimiento = "derecha"
                 r.player["y"] += 10
 
+            if event.key == pygame.K_w:
+                r.movimiento = "arriba"
+                r.player["x"] += 10
+            if event.key == pygame.K_s:
+                r.movimiento = "abajo"
+                r.player["x"] -= 10
+            if event.key == pygame.K_a:
+                r.movimiento = "izquierda"
+                r.player["y"] -= 10
+            if event.key == pygame.K_d:
+                r.movimiento = "derecha"
+                r.player["y"] += 10
+
+        r.comprobar()
+
         if r.player["wincondition"] == 4:
             running = False
+
+final = pygame.image.load('./pantalla_fin.jpg')
+
+if r.player["wincondition"] == 4:
+    running = True
+    while running:
+        screen.fill(BLACK, (0, 0, r.width, r.height))
+        for x in range(0, 512):
+            for y in range(0, 512):
+                color = final.get_at((x, y))
+                r.point(x, y, color)
+
+        pygame.display.flip()
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                running = False
+
+            if (event.type == pygame.KEYDOWN):
+                if event.key == pygame.K_KP_ENTER:
+                    running = False
