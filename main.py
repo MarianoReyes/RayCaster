@@ -165,7 +165,7 @@ class Raycaster(object):
                             self.point(x, y, c)
                             self.zbuffer[x - 500] = sprite_d
 
-    # funcion creada por si chica con pared
+    # funcion creada por si choca con pared
     def goback(self):
         if self.movimiento == "izquierda":
             self.player["y"] += 10
@@ -249,8 +249,9 @@ clock = pygame.time.Clock()
 
 inicio = pygame.image.load('./pantalla_inicio.jpg')
 
-pygame.mixer.Channel(0).play(pygame.mixer.Sound('musica_nivel1.mp3'))
-
+pygame.mixer.Channel(0).play(pygame.mixer.Sound('musica_nivel1.mp3'), -1)
+pygame.mixer.Channel(0).set_volume(0.3)
+pygame.mixer.Channel(1).set_volume(0.8)
 
 running = True
 while running:
