@@ -4,9 +4,11 @@ from math import cos, sin, pi, atan2
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 128)
 
-SKY = (50, 100, 200)
-GROUND = (200, 200, 100)
+SKY = (150, 147, 135)
+GROUND = (168, 114, 67)
 
 colors = [
     (0, 20, 10),
@@ -17,39 +19,16 @@ colors = [
 ]
 
 walls = {
-    "1": pygame.image.load('./wall1.png'),
-    "2": pygame.image.load('./wall2.png'),
-    "3": pygame.image.load('./wall3.png'),
-    "4": pygame.image.load('./wall4.png'),
-    "5": pygame.image.load('./wall5.png')
+    "1": pygame.image.load('./wallc1.jpg'),
+    "2": pygame.image.load('./wallc2.jpg'),
 }
 
 enemies = [
     {
-        "x": 100,
-        "y": 200,
-        "texture": pygame.image.load('./sprite2.png')
+        "x": 200,
+        "y": 100,
+        "texture": pygame.image.load('./cofre.png')
     },
-    {
-        "x": 280,
-        "y": 190,
-        "texture": pygame.image.load('./sprite3.png')
-    },
-    {
-        "x": 225,
-        "y": 340,
-        "texture": pygame.image.load('./sprite4.png')
-    },
-    {
-        "x": 220,
-        "y": 425,
-        "texture": pygame.image.load('./sprite1.png')
-    },
-    {
-        "x": 320,
-        "y": 420,
-        "texture": pygame.image.load('./sprite2.png')
-    }
 ]
 
 
@@ -64,8 +43,10 @@ class Raycaster(object):
             "x": self.blocksize + self.blocksize / 2,
             "y": self.blocksize + self.blocksize / 2,
             "fov": int(pi/3),
-            "a": int(pi/3)
+            "a": int(pi/3),
+            "wincondition": 0
         }
+        movimineto = ""
 
     def point(self, x, y, c=WHITE):
         # colocar pixel de game of life
@@ -134,7 +115,7 @@ class Raycaster(object):
         self.point(int(self.player["x"]), int(self.player["y"]))
 
     def draw_sprite(self, sprite):
-        # why atan2? https://stackoverflow.com/a/12011762
+
         sprite_a = atan2(sprite["y"] - self.player["y"],
                          sprite["x"] - self.player["x"])
         sprite_d = ((self.player["x"] - sprite["x"]) **
@@ -156,15 +137,30 @@ class Raycaster(object):
                     tx = int((x - sprite_x) * 128/sprite_size)
                     ty = int((y - sprite_y) * 128/sprite_size)
                     c = sprite["texture"].get_at((tx, ty))
-                    if c != (152, 0, 136, 255):
+                    if c != (0, 0, 0, 0):
                         self.point(x, y, c)
                         self.zbuffer[x - 500] = sprite_d
+
+    # funcion creada por si chica con pared
+    def goback(self):
+        if self.movimiento == "izquierda":
+            self.player["x"] += 10
+            self.player["y"] += 10
+        elif self.movimiento == "derecha":
+            self.player["x"] -= 10
+            self.player["y"] -= 10
+        elif self.movimiento == "arriba":
+            self.player["x"] -= 10
+            self.player["y"] += 10
+        elif self.movimiento == "abajo":
+            self.player["x"] += 10
+            self.player["y"] -= 10
 
     def render(self):
         self.draw_map()
         self.draw_player()
 
-        density = 100
+        density = 40
 
         # minimap
         for i in range(0, density):
@@ -179,16 +175,21 @@ class Raycaster(object):
             self.point(501, i)
 
         # draw in 3d
-        for i in range(0, int(self.width/2)):
-            a = self.player["a"] - self.player["fov"] / \
-                2 + self.player["fov"]*i/(self.width/2)
-            d, c, tx = self.cast_ray(a)
+        try:
+            for i in range(0, int(self.width/2)):
+                a = self.player["a"] - self.player["fov"] / \
+                    2 + self.player["fov"]*i/(self.width/2)
+                d, c, tx = self.cast_ray(a)
 
-            x = int(self.width/2 + i)
-            h = self.height/(d * cos(a-self.player["a"])) * 100
+                x = int(self.width/2 + i)
 
-            self.draw_stake(x, h, tx, c)
-            self.zbuffer[i] = d
+                h = self.height/(d * cos(a-self.player["a"])) * 100
+
+                self.draw_stake(x, h, tx, c)
+                self.zbuffer[i] = d
+        except:
+            print("Hay una pared ahí...")
+            self.goback()
 
         for enemy in enemies:
             self.point(enemy["x"], enemy["y"], (0, 0, 0))
@@ -201,30 +202,51 @@ screen = pygame.display.set_mode((1000, 500))
 r = Raycaster(screen)
 r.load_map('./map.txt')
 
+pygame.display.set_caption('Get Chests')
+
+font = pygame.font.Font('freesansbold.ttf', 32)
+
+clock = pygame.time.Clock()
+
+
 running = True
 while running:
+    clock.tick()
+    fps = clock.get_fps()
+    fps = str(round(fps, 2)) + " fps"
+    text = font.render(fps, True, WHITE, BLACK)
+
     screen.fill(BLACK, (0, 0, r.width/2, r.width/2))
     screen.fill(SKY, (r.width/2, 0, r.width, r.height/2))
     screen.fill(GROUND, (r.width/2, r.height/2, r.width, r.height/2))
     r.render()
+    screen.blit(text, (r.width - 300, r.height - 50))
 
     pygame.display.flip()
 
     for event in pygame.event.get():
+
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
 
-            if event.key == pygame.K_s:
+            if event.key == pygame.K_d:
                 r.player["a"] += pi/10
-            if event.key == pygame.K_w:
+            if event.key == pygame.K_a:
                 r.player["a"] -= pi/10
 
             if event.key == pygame.K_UP:
+                r.movimiento = "arriba"
                 r.player["x"] += 10
             if event.key == pygame.K_DOWN:
+                r.movimiento = "abajo"
                 r.player["x"] -= 10
             if event.key == pygame.K_LEFT:
+                r.movimiento = "izquierda"
                 r.player["y"] -= 10
             if event.key == pygame.K_RIGHT:
+                r.movimiento = "derecha"
                 r.player["y"] += 10
+
+        if r.player["wincondition"] == 4:
+            running = False
